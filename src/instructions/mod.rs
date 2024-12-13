@@ -17,6 +17,7 @@ pub mod instruction_id {
 	pub const FAST_SYNC_READ : u8 = 0x8A;
 	pub const BULK_READ     : u8 = 0x92;
 	pub const BULK_WRITE    : u8 = 0x93;
+	pub const FAST_BULK_READ : u8 = 0x9A;
 	pub const STATUS        : u8 = 0x55;
 }
 
@@ -39,6 +40,7 @@ mod sync_read;
 mod sync_write;
 mod write;
 mod fast_sync_read;
+mod fast_bulk_read;
 
 use crate::SerialPort;
 pub use factory_reset::FactoryResetKind;
