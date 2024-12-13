@@ -1,3 +1,4 @@
+use crate::InvalidParameterCount;
 mod status;
 pub use status::{StatusPacket, Response};
 mod instruction;
@@ -63,5 +64,20 @@ impl<'a> Packet<'a> for StatusPacket<'a> {
 
 	fn as_bytes(&'a self) -> &'a [u8] {
 		self.data
+	}
+}
+
+pub trait Read {
+	const LEN: u16;
+
+	fn from_bytes(bytes: &[u8]) -> Result<Self, InvalidParameterCount> where Self: Sized;
+}
+
+impl Read for u8 {
+	const LEN: u16 = size_of::<u8>() as u16;
+
+	fn from_bytes(bytes: &[u8]) -> Result<Self, InvalidParameterCount> {
+		InvalidParameterCount::check(bytes.len(), Self::LEN as usize)?;
+		Ok(bytes[0])
 	}
 }

@@ -1,5 +1,6 @@
 use crate::endian::{read_u16_le, read_u32_le, read_u8_le};
 use crate::Packet;
+use crate::packet::Read;
 
 /// A status response that is currently in the read buffer of a bus.
 ///
@@ -31,6 +32,24 @@ impl StatusPacket<'_> {
 	/// Consult the manual of your motor for more information.
 	pub fn alert(&self) -> bool {
 		self.error() & 0x80 != 0
+	}
+
+	pub fn into_response<T>(self) -> Result<Response<T>, crate::InvalidParameterCount> where T: Read {
+		Ok(
+			Response {
+				motor_id: self.packet_id(),
+				alert: self.alert(),
+				data:  T::from_bytes(self.data)?,
+			}
+		)
+	}
+
+	pub fn as_response(&self) -> Response<&[u8]> {
+		Response {
+			motor_id: self.packet_id(),
+			alert: self.alert(),
+			data: self.parameters()
+		}
 	}
 }
 
