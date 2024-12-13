@@ -14,7 +14,7 @@ use crate::StatusPacket;
 
 /// Dynamixel Protocol 2 communication bus.
 pub struct Bus<ReadBuffer, WriteBuffer, T: SerialPort> {
-	messenger: Messenger<ReadBuffer, WriteBuffer, T>,
+	pub(crate) messenger: Messenger<ReadBuffer, WriteBuffer, T>,
 }
 //
 impl<ReadBuffer, WriteBuffer, T> core::fmt::Debug for Bus<ReadBuffer, WriteBuffer, T>
