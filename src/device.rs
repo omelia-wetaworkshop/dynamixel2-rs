@@ -1,7 +1,7 @@
 use crate::endian::read_u16_le;
 use crate::instructions::instruction_id;
 use crate::messaging::Messenger;
-use crate::{InvalidParameterCount, Packet, ReadError, SerialPort, WriteError};
+use crate::{InvalidParameterCount, Packet, ReadError, Response, SerialPort, StatusPacket, WriteError};
 use core::time::Duration;
 
 #[cfg(feature = "alloc")]
@@ -223,6 +223,7 @@ pub enum Instructions<T> {
 	SyncWrite { address: u16, length: u16, parameters: T },
 	BulkRead { parameters: T },
 	BulkWrite { parameters: T },
+	Response { motor_id: u8, error: u8, parameters: T },
 	Unknown { instruction: u8, parameters: T },
 }
 
@@ -295,7 +296,16 @@ impl<'a> TryFrom<InstructionPacket<'a>> for Instruction<&'a [u8]> {
 			},
 			instruction_id::BULK_READ => Instructions::BulkRead { parameters },
 			instruction_id::BULK_WRITE => Instructions::BulkWrite { parameters },
-
+			instruction_id::STATUS => {
+				let status_packet = StatusPacket {
+					data
+				};
+				let error = status_packet.error();
+				let Response {
+					motor_id, data , ..
+				} = status_packet.into();
+				Instructions::Response { motor_id, error, parameters: data }
+			},
 			instruction => Instructions::Unknown { instruction, parameters },
 		};
 
@@ -343,6 +353,11 @@ impl<'a> TryFrom<InstructionPacket<'a>> for Instruction<Vec<u8>> {
 				parameters: parameters.to_owned(),
 			},
 			Instructions::BulkWrite { parameters } => Instructions::BulkRead {
+				parameters: parameters.to_owned(),
+			},
+			Instructions::Response {motor_id, error, parameters, } =>  Instructions::Response {
+				motor_id,
+				error,
 				parameters: parameters.to_owned(),
 			},
 			Instructions::Unknown { instruction, parameters } => Instructions::Unknown {
